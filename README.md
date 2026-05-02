@@ -87,7 +87,7 @@ No parameters.
 
 ## Adding Custom Tools
 
-Any static class annotated with `[McpServerToolType]` attribute and static method with `[McpServerTool]` attribute is discovered automatically at server startup — no registration required.
+Any type annotated with `[McpServerToolType]` is discovered automatically at server startup, and any `public static` method on that type annotated with `[McpServerTool]` is registered as a tool — no registration required.
 
 ```csharp
 // Assets/Scripts/Runtime/MyGameTools.cs (custom tools created by the game title)

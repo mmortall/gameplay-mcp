@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using ModelContextProtocol.Server;
 using UnityEngine.SceneManagement;
+using UnityEngine.Scripting;
 
 namespace GameplayMcp.Tools
 {
@@ -26,6 +27,7 @@ namespace GameplayMcp.Tools
         /// <returns>JSON array of scene objects with name and active fields, or error message on failure.</returns>
         [McpServerTool(Name = "list_scenes", ReadOnly = true, Destructive = false)]
         [Description("Returns the currently loaded scenes as JSON. The active scene is marked with active=true.")]
+        [Preserve]
         public static async Task<string> ListScenes(CancellationToken cancellationToken = default)
         {
             await UniTask.SwitchToMainThread(cancellationToken);

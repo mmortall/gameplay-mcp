@@ -16,6 +16,7 @@ using TestHelper.UI.GameObjectMatchers;
 using TestHelper.UI.Operators;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.Scripting;
 
 namespace GameplayMcp.Tools
 {
@@ -46,6 +47,7 @@ namespace GameplayMcp.Tools
         /// <returns>Success message, or an error message if the operation fails.</returns>
         [McpServerTool(Name = "invoke_action", ReadOnly = false, Destructive = false)]
         [Description("Finds a reachable GameObject and executes the specified operator on it.")]
+        [Preserve]
         public static async Task<string> InvokeAction(
             [Description("Concrete operator class name (e.g., \"UguiClickOperator\").")]
             string operatorName,

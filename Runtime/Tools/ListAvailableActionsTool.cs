@@ -13,6 +13,7 @@ using ModelContextProtocol.Server;
 using TestHelper.UI.Extensions;
 using TestHelper.UI.Operators;
 using UnityEngine;
+using UnityEngine.Scripting;
 using UnityEngine.UI;
 
 namespace GameplayMcp.Tools
@@ -32,6 +33,7 @@ namespace GameplayMcp.Tools
         /// <returns>JSON array of action entries, or a message if none are found.</returns>
         [McpServerTool(Name = "list_available_actions", ReadOnly = true, Destructive = false)]
         [Description("Returns a list of operable actions as a JSON array. Each entry contains a target GameObject and the operator that can act on it.")]
+        [Preserve]
         public static async Task<string> ListAvailableActions(
             [Description("If true (default), only reachable GameObjects are included.")]
             bool reachable = true,

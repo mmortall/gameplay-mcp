@@ -128,7 +128,7 @@ jobs:
       - name: Set coverage path for octocov
         run: |
           mv ${{ env.PACKAGE_PATH }}/.octocov.yml .
-          sed -i -r 's/UnityProject~\/Logs/${{ steps.test.outputs.coveragePath }}/' .octocov.yml
+          sed -i -r 's#UnityProject~\/Logs#${{ steps.test.outputs.coveragePath }}#' .octocov.yml
         if: ${{ matrix.octocov }}
 
       - name: Run octocov

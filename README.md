@@ -1,6 +1,7 @@
 # Gameplay MCP Server for Unity
 
 [![Meta file check](https://github.com/nowsprinting/gameplay-mcp/actions/workflows/metacheck.yml/badge.svg)](https://github.com/nowsprinting/gameplay-mcp/actions/workflows/metacheck.yml)
+[![Test](https://github.com/nowsprinting/gameplay-mcp/actions/workflows/test.yml/badge.svg)](https://github.com/nowsprinting/gameplay-mcp/actions/workflows/test.yml)
 [![openupm](https://img.shields.io/npm/v/com.nowsprinting.gameplay-mcp?label=openupm&registry_uri=https://package.openupm.com)](https://openupm.com/packages/com.nowsprinting.gameplay-mcp/)
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/nowsprinting/gameplay-mcp)
 

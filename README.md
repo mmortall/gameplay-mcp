@@ -113,7 +113,7 @@ public static class MyGameTools
 > [!IMPORTANT]  
 > In IL2CPP builds, custom tool types are discovered via reflection and may be removed by the managed code stripper. Add `[Preserve]` attribute to your tool method.
 
-> [!TIPS]  
+> [!TIP]  
 > If your custom tool needs access to `McpConfig` (e.g., to use `GameObjectFinder` or `OperatorPool`), declare it as a parameter with a default of `null` — it is injected automatically at runtime.
 
 If a custom tool covers the same use case as a built-in tool, you can disable the built-in tool using `DisabledTools`:

@@ -9,6 +9,7 @@ using Cysharp.Threading.Tasks;
 using GameplayMcp.Internals;
 using ModelContextProtocol.Server;
 using TestHelper.UI.GameObjectMatchers;
+using UnityEngine.Scripting;
 
 namespace GameplayMcp.Tools
 {
@@ -33,6 +34,7 @@ namespace GameplayMcp.Tools
         /// <returns>JSON string with the found GameObject's name, path, and component details, or an exception message if not found.</returns>
         [McpServerTool(Name = "inspect_game_object", ReadOnly = true, Destructive = false)]
         [Description("Inspect a GameObject by name, path, text label, or texture name and returns properties as JSON. Waits for the GameObject to appear and become reachable within a timeout period.")]
+        [Preserve]
         public static async Task<string> InspectGameObject(
             [Description("Hierarchy path separated by '/'. Supports glob wildcards (?, *, **).")]
             string path = null,

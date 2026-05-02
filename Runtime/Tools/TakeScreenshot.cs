@@ -10,6 +10,7 @@ using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 using TestHelper.RuntimeInternals;
 using UnityEngine;
+using UnityEngine.Scripting;
 
 namespace GameplayMcp.Tools
 {
@@ -29,6 +30,7 @@ namespace GameplayMcp.Tools
         /// <returns>ImageContentBlock on success, TextContentBlock with error message on failure.</returns>
         [McpServerTool(Name = "take_screenshot", ReadOnly = true, Destructive = false)]
         [Description("Captures the current game screen and returns it as an image.")]
+        [Preserve]
         public static async Task<ContentBlock> TakeScreenshotTool(
             [Description("Image format: \"jpeg\" (default) or \"png\".")]
             string format = "jpeg",

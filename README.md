@@ -179,7 +179,7 @@ If installing via OpenUPM:
 
 ### 3. Start the MCP Server
 
-Start the MCP server from your game title's code. A typical approach is to use `[RuntimeInitializeOnLoad]` attribute for automatic startup, or toggle it on/off from a debug menu.
+Start the MCP server from your game title's code. A typical approach is to use `[RuntimeInitializeOnLoadMethod]` attribute for automatic startup, or toggle it on/off from a debug menu.
 
 ```csharp
 var config = new McpConfig

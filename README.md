@@ -9,8 +9,8 @@ Model context protocol (MCP) server for gameplay. Provides tools that AI models 
 
 ## Key Features
 
-- **Customizable for your game title** — Built on the [UI Test Helper](https://github.com/nowsprinting/test-helper.ui) package, so you can customize operators, reachability strategies, and interactable detection to match your game's UI.
-- **Easy to extend** — The MCP server is built on [MCP C# SDK](https://github.com/modelcontextprotocol/csharp-sdk). Adding custom tools is as simple as placing `[McpServerToolType]` and `[McpServerTool]` attributes.
+- **Built-in Tools** — Let AI models list available UI actions, interact with UI elements, inspect GameObjects, capture screenshots, and query loaded scenes — all out of the box.
+- **Customizable and extensible** — Built on the [UI Test Helper](https://github.com/nowsprinting/test-helper.ui) package and [MCP C# SDK](https://github.com/modelcontextprotocol/csharp-sdk). Customize operators, reachability strategies, and interactable detection to match your game's UI, and add custom tools with just `[McpServerToolType]` and `[McpServerTool]` attributes.
 - **Works with IL2CPP builds** — You can run the MCP server on your player build, including IL2CPP.
 
 ## Limitations
@@ -24,56 +24,12 @@ Model context protocol (MCP) server for gameplay. Provides tools that AI models 
 - [UI Test Helper](https://github.com/nowsprinting/test-helper.ui) package v1.2.2 or newer
 - [Test Helper](https://github.com/nowsprinting/test-helper) package v1.4.1 or newer
 
-## Getting Started
-
-### Start the MCP Server
-
-Start the MCP server from your game title's code. A typical approach is to use `RuntimeInitializeOnLoad` for automatic startup, or toggle it on/off from a debug menu.
-
-```csharp
-var config = new McpConfig
-{
-    OperatorPool = new OperatorPool()
-        .Register<UguiClickOperator>()
-        .Register<UguiDragAndDropOperator>()
-        .Register<UguiTextInputOperator>()
-};
-var server = new McpServer(config);
-server.StartAsync().Forget();
-```
-
-`McpConfig` exposes additional settings beyond `OperatorPool`, including `GameObjectFinder`, `IsInteractable`, `ReachableStrategy`, and `ToolsNamespace`. Refer to the [UI Test Helper](https://github.com/nowsprinting/test-helper.ui) documentation for details on the UI-related configuration options.
-
-> [!TIP]  
-> You can override the listen prefix via the `-gameplayMcpListenPrefix` command-line argument. Note that if `ListenPrefix` is set in `McpConfig`, it takes precedence over the command-line argument.
-
-To stop the server from a debug menu if you need:
-
-```csharp
-server.Dispose();
-```
-
-### MCP Settings in Coding Agent
-
-Add the MCP server configuration to your coding agent.
-e.g.,
-```
-{
-  "mcpServers": {
-    "gameplay": {
-      "type": "http",
-      "url": "http://localhost:8010/mcp"
-    }
-  }
-}
-```
-
 ## Built-in Tools
 
 Most built-in tools are wrappers of [UI Test Helper](https://github.com/nowsprinting/test-helper.ui) APIs.
 
 > [!NOTE]  
-> The tool name is prefixed with the namespace; the default namespace is `mygame`, resulting in `mygame.inspect_game_object`.
+> The tool name is prefixed with the namespace. The default namespace is `mygame`, so it will look like `mygame.inspect_game_object`.
 
 ### list_available_actions
 
@@ -125,19 +81,27 @@ Returns the currently loaded scenes as JSON. The active scene is marked with `ac
 
 No parameters.
 
+> [!TIP]  
+> The `list_scenes` tool only provides a simplified game state.
+> You need to create a custom tool that returns more detailed game states so the model can determine the appropriate course of action.
+
 ## Adding Custom Tools
 
-Any class annotated with `[McpServerToolType]` is discovered automatically at server startup — no registration required.
+Any static class annotated with `[McpServerToolType]` attribute and static method with `[McpServerTool]` attribute is discovered automatically at server startup — no registration required.
 
 ```csharp
 // Assets/Scripts/Runtime/MyGameTools.cs (custom tools created by the game title)
 // Just add [McpServerToolType] and it's registered automatically!
 [McpServerToolType]
-public class MyGameTools
+public static class MyGameTools
 {
     [McpServerTool(Name = "get_player_status", ReadOnly = true, Destructive = false)]
     [Description("Returns the player's current status as JSON.")]
-    public async Task<string> GetPlayerStatus(CancellationToken ct = default)
+    [Preserve]
+    public static async Task<string> GetPlayerStatus(
+        string someParam,
+        McpConfig config = null,    // injected automatically
+        CancellationToken ct = default)
     {
         await UniTask.SwitchToMainThread(ct);
         var player = GameObject.FindWithTag("Player");
@@ -146,16 +110,18 @@ public class MyGameTools
 }
 ```
 
-At minimum, it is recommended to implement a tool that returns the current game state, so the AI model can understand the game situation without relying solely on screenshots.
+> [!IMPORTANT]  
+> In IL2CPP builds, custom tool types are discovered via reflection and may be removed by the managed code stripper. Add `[Preserve]` attribute to your tool method.
 
-If a custom tool covers the same use case as a built-in tool, you can hide the built-in tool via `DisabledTools`:
+> [!TIPS]  
+> If your custom tool needs access to `McpConfig` (e.g., to use `GameObjectFinder` or `OperatorPool`), declare it as a parameter with a default of `null` — it is injected automatically at runtime.
+
+If a custom tool covers the same use case as a built-in tool, you can disable the built-in tool using `DisabledTools`:
 
 ```csharp
 var config = new McpConfig();
-config.DisabledTools.Add("mygame.inspect_game_object"); // use the full prefixed name
+config.DisabledTools.Add("mygame.list_scenes"); // use the full prefixed name
 ```
-
-Hidden tools are excluded from `tools/list` responses. MCP clients typically only call tools they discover via `tools/list`, so this effectively disables them.
 
 ## Agent Skills
 
@@ -171,6 +137,87 @@ When providing instructions to an AI model, consider defining the following as s
     - When the AI needs to accurately read UI text.
     - For pixel art games where compression artifacts are visible.
     - When pixel-level accuracy is required for debugging purposes (e.g., visual regression testing).
+
+## Getting Started
+
+### 1. Install dependent NuGet packages
+
+Install the [MCP C# SDK](https://www.nuget.org/packages/ModelContextProtocol) NuGet package v1.0.0 or newer with [OpenUPM](https://openupm.com/) (via [UnityNuGet](https://github.com/bdovaz/UnityNuGet)), [NuGetForUnity](https://github.com/GlitchEnzo/NuGetForUnity), or your preferred method.
+
+If installing via OpenUPM:
+
+1. Open the Project Settings window (**Editor > Project Settings**) and select **Package Manager** tab
+2. Click **+** button under the **Scoped Registries** and enter the following settings:
+    1. **Name:** `unitynuget-registry.openupm.com`
+    2. **URL:** `https://unitynuget-registry.openupm.com`
+    3. **Scope(s):** `org.nuget`
+3. Open the Package Manager window (**Window > Package Manager**) and select **My Registries** tab
+4. Select **ModelContextProtocol (NuGet)** and click the **Install** button
+
+### 2. Install via Package Manager window
+
+1. Open the Project Settings window (**Editor > Project Settings**) and select **Package Manager** tab (figure 1)
+2. Click **+** button under the **Scoped Registries** and enter the following settings:
+    1. **Name:** `package.openupm.com`
+    2. **URL:** `https://package.openupm.com`
+    3. **Scope(s):** `com.nowsprinting` and `com.cysharp`
+3. Open the Package Manager window (**Window > Package Manager**) and select **My Registries** tab (figure 2)
+4. Select **Gameplay MCP** and click the **Install** button
+
+> [!NOTE]  
+> Do not forget to add `com.cysharp` into scopes. These are used within this package.
+
+**Figure 1.** Scoped Registries setting in Project Settings window
+
+![](Documentation~/ScopedRegistries_Dark.png#gh-dark-mode-only)
+![](Documentation~/ScopedRegistries_Light.png#gh-light-mode-only)
+
+**Figure 2.** My Registries in Package Manager window
+
+![](Documentation~/PackageManager_Dark.png#gh-dark-mode-only)
+![](Documentation~/PackageManager_Light.png#gh-light-mode-only)
+
+### 3. Start the MCP Server
+
+Start the MCP server from your game title's code. A typical approach is to use `[RuntimeInitializeOnLoad]` attribute for automatic startup, or toggle it on/off from a debug menu.
+
+```csharp
+var config = new McpConfig
+{
+    OperatorPool = new OperatorPool()
+        .Register<UguiClickOperator>()
+        .Register<UguiDragAndDropOperator>()
+        .Register<UguiTextInputOperator>()
+};
+var server = new McpServer(config);
+server.StartAsync().Forget();
+```
+
+`McpConfig` exposes additional settings beyond `OperatorPool`, including `GameObjectFinder`, `IsInteractable`, `ReachableStrategy`, and `ToolsNamespace`. Refer to the [UI Test Helper](https://github.com/nowsprinting/test-helper.ui) documentation for details on the UI-related configuration options.
+
+> [!TIP]  
+> You can override the listen prefix via the `-gameplayMcpListenPrefix` command-line argument. Note that if `ListenPrefix` is set in `McpConfig`, it takes precedence over the command-line argument.
+
+To stop the server from a debug menu if you need:
+
+```csharp
+server.Dispose();
+```
+
+### 4. MCP Settings in Coding Agent
+
+Add the MCP server configuration to your coding agent.
+e.g.,
+```
+{
+  "mcpServers": {
+    "gameplay": {
+      "type": "http",
+      "url": "http://localhost:8010/mcp"
+    }
+  }
+}
+```
 
 ## License
 

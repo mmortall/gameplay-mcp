@@ -145,7 +145,7 @@ Install the [MCP C# SDK](https://www.nuget.org/packages/ModelContextProtocol) Nu
 
 If installing via OpenUPM:
 
-1. Open the Project Settings window (**Editor > Project Settings**) and select **Package Manager** tab
+1. Open the Project Settings window (**Edit > Project Settings**) and select **Package Manager** tab
 2. Click **+** button under the **Scoped Registries** and enter the following settings:
     1. **Name:** `unitynuget-registry.openupm.com`
     2. **URL:** `https://unitynuget-registry.openupm.com`
@@ -155,7 +155,7 @@ If installing via OpenUPM:
 
 ### 2. Install via Package Manager window
 
-1. Open the Project Settings window (**Editor > Project Settings**) and select **Package Manager** tab (figure 1)
+1. Open the Project Settings window (**Edit > Project Settings**) and select **Package Manager** tab (figure 1)
 2. Click **+** button under the **Scoped Registries** and enter the following settings:
     1. **Name:** `package.openupm.com`
     2. **URL:** `https://package.openupm.com`

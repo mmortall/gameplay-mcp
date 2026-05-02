@@ -99,7 +99,6 @@ public static class MyGameTools
     [Description("Returns the player's current status as JSON.")]
     [Preserve]
     public static async Task<string> GetPlayerStatus(
-        string someParam,
         McpConfig config = null,    // injected automatically
         CancellationToken ct = default)
     {

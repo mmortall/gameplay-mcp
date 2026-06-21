@@ -21,6 +21,7 @@ Model context protocol (MCP) server for gameplay. Provides tools that AI models 
 
 - Unity 2023.1 or newer
 - [MCP C# SDK](https://www.nuget.org/packages/ModelContextProtocol) NuGet package v1.0.0 or newer
+- [Microsoft.Extensions.DependencyInjection](https://www.nuget.org/packages/microsoft.extensions.dependencyinjection) NuGet package v10.0.3 or newer
 - [UI Test Helper](https://github.com/nowsprinting/test-helper.ui) package v1.2.2 or newer
 - [Test Helper](https://github.com/nowsprinting/test-helper) package v1.4.1 or newer
 
@@ -152,6 +153,7 @@ If installing via OpenUPM:
     3. **Scope(s):** `org.nuget`
 3. Open the Package Manager window (**Window > Package Manager**) and select **My Registries** tab
 4. Select **ModelContextProtocol (NuGet)** and click the **Install** button
+5. Select **Microsoft.Extensions.DependencyInjection (NuGet)** and click the **Install** button
 
 ### 2. Install via Package Manager window
 

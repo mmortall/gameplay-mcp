@@ -34,11 +34,15 @@ namespace GameplayMcp.Tools
             try
             {
                 var activeScene = SceneManager.GetActiveScene();
-                var scenes = new List<object>();
+                var scenes = new List<Dictionary<string, object>>();
                 for (var i = 0; i < SceneManager.sceneCount; i++)
                 {
                     var scene = SceneManager.GetSceneAt(i);
-                    scenes.Add(new { name = scene.name, active = scene == activeScene });
+                    scenes.Add(new Dictionary<string, object>
+                    {
+                        ["name"] = scene.name,
+                        ["active"] = scene == activeScene,
+                    });
                 }
                 return JsonSerializer.Serialize(scenes);
             }

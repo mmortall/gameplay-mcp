@@ -54,10 +54,14 @@ namespace GameplayMcp.Internals
             var sut = new GameObject("WithCollider");
             var collider = sut.AddComponent<BoxCollider>();
             collider.isTrigger = true;
+            // Reading the getter here (assignment above only calls the setter) is a direct static
+            // reference that keeps UnityLinker from stripping it under IL2CPP + Managed Stripping High
+            // on a standalone player; GameObjectSerializer reaches it only via reflection, which the
+            // linker cannot see through, so without this read the getter (and the JSON field) vanishes.
+            Assume.That(collider.isTrigger, Is.True);
 
             var actual = GameObjectSerializer.Serialize(sut);
 
-            // isTrigger is a public property of BoxCollider; it must appear at the same level as "type"
             Assert.That(actual, Does.Contain("isTrigger").And.Contain("True"));
         }
 

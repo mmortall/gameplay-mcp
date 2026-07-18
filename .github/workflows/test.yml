@@ -61,6 +61,21 @@ jobs:
           il2cpp-code-generation: 1   # Optimize for code size and build time
           managed-stripping-level: 3  # High
 
+      - name: Generate link.xml to exclude GameplayMcp and TestHelper.UI assemblies from managed code stripping
+        run: |
+          mkdir -p "$CREATED_PROJECT_PATH/Assets"
+          cat > "$CREATED_PROJECT_PATH/Assets/link.xml" <<'EOF'
+          <linker>
+            <assembly fullname="GameplayMcp" preserve="all"/>
+            <assembly fullname="TestHelper.UI" preserve="all"/>
+          </linker>
+          EOF
+        # InvokeActionTool resolves operator types/methods and GameObjectSerializer reads component
+        # properties only via reflection; under IL2CPP + Managed Stripping High this reflection-only
+        # surface gets stripped even with per-type [Preserve] (confirmed ineffective on this CI
+        # environment), so the whole assemblies are exempted from stripping here instead.
+        if: ${{ matrix.testMode == 'Standalone' }}
+
       - name: Get package checkout path
         run: |
           name=com.$(echo "${GITHUB_REPOSITORY}" | sed 's/\//\./g')

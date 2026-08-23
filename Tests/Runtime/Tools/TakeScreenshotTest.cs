@@ -19,7 +19,7 @@ namespace GameplayMcp.Tools
         [FocusGameView]
         public async Task TakeScreenshotTool_DefaultParameters_ReturnsImageContentBlock()
         {
-            var actual = await TakeScreenshot.TakeScreenshotTool();
+            var actual = await TakeScreenshot.TakeScreenshotToolAsync();
 
             Assert.That(actual, Is.TypeOf<ImageContentBlock>());
         }
@@ -29,7 +29,7 @@ namespace GameplayMcp.Tools
         [FocusGameView]
         public async Task TakeScreenshotTool_FormatPng_ReturnsPngMimeType()
         {
-            var actual = await TakeScreenshot.TakeScreenshotTool(format: "png");
+            var actual = await TakeScreenshot.TakeScreenshotToolAsync(format: "png");
 
             Assert.That(((ImageContentBlock)actual).MimeType, Is.EqualTo("image/png"));
         }
@@ -39,7 +39,7 @@ namespace GameplayMcp.Tools
         [FocusGameView]
         public async Task TakeScreenshotTool_FormatJpeg_ReturnsJpegMimeType()
         {
-            var actual = await TakeScreenshot.TakeScreenshotTool(format: "jpeg");
+            var actual = await TakeScreenshot.TakeScreenshotToolAsync(format: "jpeg");
 
             Assert.That(((ImageContentBlock)actual).MimeType, Is.EqualTo("image/jpeg"));
         }
@@ -49,7 +49,7 @@ namespace GameplayMcp.Tools
         [GameViewResolution(GameViewResolution.FullHD)]
         public async Task TakeScreenshotTool_LongSideExceedsMax_ReturnsDownscaledImage()
         {
-            var actual = await TakeScreenshot.TakeScreenshotTool(format: "png", maxPixels: 800);
+            var actual = await TakeScreenshot.TakeScreenshotToolAsync(format: "png", maxPixels: 800);
 
             var imageBlock = (ImageContentBlock)actual;
             var tex = new Texture2D(1, 1);
@@ -63,7 +63,7 @@ namespace GameplayMcp.Tools
         [GameViewResolution(GameViewResolution.VGA)]
         public async Task TakeScreenshotTool_LongSideBelowMax_ReturnsOriginalSizeImage()
         {
-            var actual = await TakeScreenshot.TakeScreenshotTool(format: "png", maxPixels: 1568);
+            var actual = await TakeScreenshot.TakeScreenshotToolAsync(format: "png", maxPixels: 1568);
 
             var imageBlock = (ImageContentBlock)actual;
             var tex = new Texture2D(1, 1);

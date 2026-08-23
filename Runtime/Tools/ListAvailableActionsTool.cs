@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,9 +31,10 @@ namespace GameplayMcp.Tools
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>JSON array of action entries, or a message if none are found.</returns>
         [McpServerTool(Name = "list_available_actions", ReadOnly = true, Destructive = false)]
-        [Description("Returns a list of operable actions as a JSON array. Each entry contains a target GameObject and the operator that can act on it.")]
+        [Description(
+            "Returns a list of operable actions as a JSON array. Each entry contains a target GameObject and the operator that can act on it.")]
         [Preserve]
-        public static async Task<string> ListAvailableActions(
+        public static async Task<string> ListAvailableActionsAsync(
             [Description("If true (default), only reachable GameObjects are included.")]
             bool reachable = true,
             McpConfig config = null, // Injected via IServiceProvider; default null is never used at runtime
@@ -44,18 +44,17 @@ namespace GameplayMcp.Tools
 
             try
             {
-                var pairs = config.InteractableComponentsFinder.FindInteractableComponentsAndOperators().ToList();
-
-                IEnumerable<(MonoBehaviour, IOperator)> filteredPairs = pairs;
-                if (reachable)
+                var entries = new List<Dictionary<string, object>>();
+                foreach (var (component, targetOperator) in
+                         config.InteractableComponentsFinder.FindInteractableComponentsAndOperators())
                 {
-                    filteredPairs = pairs.Where(pair =>
-                        config.ReachableStrategy.IsReachable(pair.Item1.gameObject, out _));
-                }
+                    if (reachable && !config.ReachableStrategy.IsReachable(component.gameObject, out _))
+                    {
+                        continue;
+                    }
 
-                var entries = filteredPairs
-                    .Select(pair => BuildEntry(pair.Item1.gameObject, pair.Item2))
-                    .ToList();
+                    entries.Add(BuildEntry(component.gameObject, targetOperator));
+                }
 
                 if (entries.Count == 0)
                 {

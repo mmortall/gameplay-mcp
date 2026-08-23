@@ -65,7 +65,7 @@ namespace GameplayMcp.Tools
             CreateEventSystem();
             var config = CreateConfigWithSpyWithoutOverload(out var spy);
 
-            await InvokeActionTool.InvokeAction(
+            await InvokeActionTool.InvokeActionAsync(
                 operatorName: nameof(SpyOperatorWithoutOverload),
                 name: ButtonName,
                 config: config);
@@ -81,7 +81,7 @@ namespace GameplayMcp.Tools
             CreateEventSystem();
             var config = CreateConfigWithSpyWithOverload(out var spy);
 
-            await InvokeActionTool.InvokeAction(
+            await InvokeActionTool.InvokeActionAsync(
                 operatorName: nameof(SpyOperatorWithOverload),
                 name: ButtonName,
                 operatorArgs: "{\"text\": \"hello\"}",
@@ -98,7 +98,7 @@ namespace GameplayMcp.Tools
             CreateEventSystem();
             var config = CreateConfigWithSpyWithOverload(out var spy);
 
-            await InvokeActionTool.InvokeAction(
+            await InvokeActionTool.InvokeActionAsync(
                 operatorName: nameof(SpyOperatorWithOverload),
                 name: ButtonName,
                 operatorArgs: null,
@@ -111,7 +111,7 @@ namespace GameplayMcp.Tools
         [CreateScene]
         public async Task InvokeAction_WithUnregisteredOperator_ReturnsError()
         {
-            var actual = await InvokeActionTool.InvokeAction(operatorName: "NonExistentOperator_12345", config: new McpConfig());
+            var actual = await InvokeActionTool.InvokeActionAsync(operatorName: "NonExistentOperator_12345", config: new McpConfig());
 
             Assert.That(actual, Does.Contain("NonExistentOperator_12345"));
         }
@@ -124,7 +124,7 @@ namespace GameplayMcp.Tools
             CreateEventSystem();
             var config = CreateConfigWithSpyWithoutOverload(out _, canOperate: false);
 
-            var actual = await InvokeActionTool.InvokeAction(
+            var actual = await InvokeActionTool.InvokeActionAsync(
                 operatorName: nameof(SpyOperatorWithoutOverload),
                 name: ButtonName,
                 config: config);
@@ -140,7 +140,7 @@ namespace GameplayMcp.Tools
             CreateEventSystem();
             var config = CreateConfigWithSpyWithoutOverload(out _);
 
-            var actual = await InvokeActionTool.InvokeAction(
+            var actual = await InvokeActionTool.InvokeActionAsync(
                 operatorName: nameof(SpyOperatorWithoutOverload),
                 name: ButtonName,
                 operatorArgs: "{\"nonExistentParam\": 42}",

@@ -15,7 +15,7 @@ namespace GameplayMcp.Tools
         [CreateScene]
         public async Task ListScenes_DefaultScene_ReturnsJsonWithSceneName()
         {
-            var actual = await ListScenesTool.ListScenes();
+            var actual = await ListScenesTool.ListScenesAsync();
 
             var scenes = JsonSerializer.Deserialize<JsonElement[]>(actual);
             Assert.That(scenes, Is.Not.Empty);
@@ -26,7 +26,7 @@ namespace GameplayMcp.Tools
         [CreateScene]
         public async Task ListScenes_DefaultScene_ActiveIsTrue()
         {
-            var actual = await ListScenesTool.ListScenes();
+            var actual = await ListScenesTool.ListScenesAsync();
 
             var scenes = JsonSerializer.Deserialize<JsonElement[]>(actual);
             Assert.That(scenes, Has.Some.Matches<JsonElement>(s => s.GetProperty("active").GetBoolean()));

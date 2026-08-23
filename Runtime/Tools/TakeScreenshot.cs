@@ -31,10 +31,11 @@ namespace GameplayMcp.Tools
         [McpServerTool(Name = "take_screenshot", ReadOnly = true, Destructive = false)]
         [Description("Captures the current game screen and returns it as an image.")]
         [Preserve]
-        public static async Task<ContentBlock> TakeScreenshotTool(
+        public static async Task<ContentBlock> TakeScreenshotToolAsync(
             [Description("Image format: \"jpeg\" (default) or \"png\".")]
             string format = "jpeg",
-            [Description("Maximum length of the long side in pixels. The image is scaled down if it exceeds this value. Defaults to 1568.")]
+            [Description(
+                "Maximum length of the long side in pixels. The image is scaled down if it exceeds this value. Defaults to 1568.")]
             int maxPixels = 1568,
             [Description("JPEG encoding quality (1-100). Only used when format is \"jpeg\". Defaults to 75.")]
             int quality = 75,

@@ -3,13 +3,12 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Text.Json;
 using System.Threading;
-using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using ModelContextProtocol;
@@ -69,7 +68,16 @@ namespace GameplayMcp
                 _serverOptions.Filters.Request.ListToolsFilters.Add(next => async (request, ct) =>
                 {
                     var result = await next(request, ct);
-                    result.Tools = result.Tools.Where(t => !disabled.Contains(t.Name)).ToList();
+                    var enabledTools = new List<Tool>(result.Tools.Count);
+                    foreach (var tool in result.Tools)
+                    {
+                        if (!disabled.Contains(tool.Name))
+                        {
+                            enabledTools.Add(tool);
+                        }
+                    }
+
+                    result.Tools = enabledTools;
                     return result;
                 });
             }
@@ -77,7 +85,8 @@ namespace GameplayMcp
 
         // WithToolsFromAssembly (IMcpServerBuilder extension) requires the DI container (IMcpServerBuilder),
         // which is not used in this project. Replicate its assembly-scanning logic here instead.
-        private static McpServerPrimitiveCollection<McpServerTool> ScanToolsFromAssemblies(IServiceProvider services, string toolsNamespace)
+        private static McpServerPrimitiveCollection<McpServerTool> ScanToolsFromAssemblies(IServiceProvider services,
+            string toolsNamespace)
         {
             var tools = new McpServerPrimitiveCollection<McpServerTool>();
             var hasNamespace = !string.IsNullOrEmpty(toolsNamespace);
@@ -91,7 +100,16 @@ namespace GameplayMcp
                 }
                 catch (ReflectionTypeLoadException e)
                 {
-                    types = e.Types.Where(t => t != null).ToArray();
+                    var loadedTypes = new List<Type>(e.Types.Length);
+                    foreach (var loadedType in e.Types)
+                    {
+                        if (loadedType != null)
+                        {
+                            loadedTypes.Add(loadedType);
+                        }
+                    }
+
+                    types = loadedTypes.ToArray();
                 }
 
                 foreach (var type in types)
@@ -155,8 +173,13 @@ namespace GameplayMcp
             _listener.Close();
             foreach (var session in _sessions.Values)
             {
+                // Dispose() is synchronous by contract, so DisposeAsync cannot be awaited here.
+                // Implementing IAsyncDisposable instead was rejected because callers dispose this server
+                // from synchronous Unity teardown paths (OnDestroy, EditorApplication quitting).
+#pragma warning disable VSTHRD002 // Avoid problematic synchronous waits
                 session.Transport.DisposeAsync().GetAwaiter().GetResult();
                 ((IAsyncDisposable)session.Server).DisposeAsync().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
             }
         }
 
@@ -351,17 +374,17 @@ namespace GameplayMcp
             await session.Transport.HandleGetRequestAsync(response.OutputStream, ct);
         }
 
-        private Task HandleDeleteAsync(HttpListenerRequest request, HttpListenerResponse response, CancellationToken _)
+        private async UniTask HandleDeleteAsync(HttpListenerRequest request, HttpListenerResponse response,
+            CancellationToken _)
         {
             var sessionId = request.Headers["Mcp-Session-Id"];
             if (!string.IsNullOrEmpty(sessionId) && _sessions.TryRemove(sessionId, out var session))
             {
-                session.Transport.DisposeAsync().GetAwaiter().GetResult();
-                ((IAsyncDisposable)session.Server).DisposeAsync().GetAwaiter().GetResult();
+                await session.Transport.DisposeAsync();
+                await ((IAsyncDisposable)session.Server).DisposeAsync();
             }
 
             response.StatusCode = 200;
-            return Task.CompletedTask;
         }
     }
 }

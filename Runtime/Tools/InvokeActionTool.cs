@@ -161,9 +161,20 @@ namespace GameplayMcp.Tools
                 {
                     types = assembly.GetTypes();
                 }
-                catch (ReflectionTypeLoadException)
+                catch (ReflectionTypeLoadException e)
                 {
-                    continue;
+                    // Keep the partially loaded types instead of skipping the assembly;
+                    // in Unity a single unloadable type would otherwise hide every operator beside it.
+                    var loadedTypes = new List<Type>(e.Types.Length);
+                    foreach (var loadedType in e.Types)
+                    {
+                        if (loadedType != null)
+                        {
+                            loadedTypes.Add(loadedType);
+                        }
+                    }
+
+                    types = loadedTypes.ToArray();
                 }
 
                 foreach (var type in types)

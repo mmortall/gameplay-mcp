@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -48,7 +47,7 @@ namespace GameplayMcp.Tools
         [McpServerTool(Name = "invoke_action", ReadOnly = false, Destructive = false)]
         [Description("Finds a reachable GameObject and executes the specified operator on it.")]
         [Preserve]
-        public static async Task<string> InvokeAction(
+        public static async Task<string> InvokeActionAsync(
             [Description("Concrete operator class name (e.g., \"UguiClickOperator\").")]
             string operatorName,
             [Description("Hierarchy path separated by '/'. Supports glob wildcards (?, *, **).")]
@@ -82,17 +81,7 @@ namespace GameplayMcp.Tools
             try
             {
                 // Step 1: Resolve operator type by scanning all loaded assemblies
-                var operatorType = AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a =>
-                    {
-                        try { return a.GetTypes(); }
-                        catch (ReflectionTypeLoadException) { return Array.Empty<Type>(); }
-                    })
-                    .FirstOrDefault(t =>
-                        t.Name == operatorName &&
-                        !t.IsInterface &&
-                        !t.IsAbstract &&
-                        typeof(IOperator).IsAssignableFrom(t));
+                var operatorType = FindOperatorType(operatorName);
 
                 if (operatorType == null)
                 {
@@ -121,9 +110,14 @@ namespace GameplayMcp.Tools
                 }
 
                 // Step 5: Select and invoke the appropriate OperateAsync overload via reflection
-                var overloads = operatorType.GetMethods()
-                    .Where(m => m.Name == "OperateAsync")
-                    .ToArray();
+                var overloads = new List<MethodInfo>();
+                foreach (var method in operatorType.GetMethods())
+                {
+                    if (method.Name == "OperateAsync")
+                    {
+                        overloads.Add(method);
+                    }
+                }
 
                 Dictionary<string, JsonElement> jsonArgs = null;
                 if (!string.IsNullOrEmpty(operatorArgs))
@@ -158,34 +152,119 @@ namespace GameplayMcp.Tools
             }
         }
 
-        private static MethodInfo SelectOverload(MethodInfo[] overloads, Dictionary<string, JsonElement> jsonArgs)
+        private static Type FindOperatorType(string operatorName)
+        {
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Type[] types;
+                try
+                {
+                    types = assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException e)
+                {
+                    // Keep the partially loaded types instead of skipping the assembly;
+                    // in Unity a single unloadable type would otherwise hide every operator beside it.
+                    var loadedTypes = new List<Type>(e.Types.Length);
+                    foreach (var loadedType in e.Types)
+                    {
+                        if (loadedType != null)
+                        {
+                            loadedTypes.Add(loadedType);
+                        }
+                    }
+
+                    types = loadedTypes.ToArray();
+                }
+
+                foreach (var type in types)
+                {
+                    if (type.Name == operatorName &&
+                        !type.IsInterface &&
+                        !type.IsAbstract &&
+                        typeof(IOperator).IsAssignableFrom(type))
+                    {
+                        return type;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static MethodInfo SelectOverload(List<MethodInfo> overloads, Dictionary<string, JsonElement> jsonArgs)
         {
             if (jsonArgs == null || jsonArgs.Count == 0)
             {
                 // Prefer the overload with the fewest extra parameters where all are optional (default: base overload)
-                return overloads
-                    .OrderBy(m => ExtraParams(m).Count())
-                    .FirstOrDefault(m => ExtraParams(m).All(p => p.HasDefaultValue));
+                MethodInfo fewest = null;
+                var fewestCount = int.MaxValue;
+                foreach (var method in overloads)
+                {
+                    var extraParams = ExtraParams(method);
+                    if (extraParams.Count >= fewestCount || !AllHaveDefaultValue(extraParams))
+                    {
+                        continue;
+                    }
+
+                    fewest = method;
+                    fewestCount = extraParams.Count;
+                }
+
+                return fewest;
             }
 
             var jsonKeys = new HashSet<string>(jsonArgs.Keys);
 
-            return overloads.FirstOrDefault(m =>
+            foreach (var method in overloads)
             {
-                var extraParams = ExtraParams(m).ToArray();
-                var extraParamNames = new HashSet<string>(extraParams.Select(p => p.Name));
-                var requiredParamNames =
-                    new HashSet<string>(extraParams.Where(p => !p.HasDefaultValue).Select(p => p.Name));
+                var extraParamNames = new HashSet<string>();
+                var requiredParamNames = new HashSet<string>();
+                foreach (var parameter in ExtraParams(method))
+                {
+                    extraParamNames.Add(parameter.Name);
+                    if (!parameter.HasDefaultValue)
+                    {
+                        requiredParamNames.Add(parameter.Name);
+                    }
+                }
 
                 // All JSON keys must exist in the overload's extra parameter names,
                 // and all required extra parameters must be present in the JSON.
-                return jsonKeys.IsSubsetOf(extraParamNames) && requiredParamNames.IsSubsetOf(jsonKeys);
-            });
+                if (jsonKeys.IsSubsetOf(extraParamNames) && requiredParamNames.IsSubsetOf(jsonKeys))
+                {
+                    return method;
+                }
+            }
+
+            return null;
         }
 
-        private static IEnumerable<ParameterInfo> ExtraParams(MethodInfo method)
+        private static bool AllHaveDefaultValue(List<ParameterInfo> parameters)
         {
-            return method.GetParameters().Where(p => !FixedParamNames.Contains(p.Name));
+            foreach (var parameter in parameters)
+            {
+                if (!parameter.HasDefaultValue)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static List<ParameterInfo> ExtraParams(MethodInfo method)
+        {
+            var extraParams = new List<ParameterInfo>();
+            foreach (var parameter in method.GetParameters())
+            {
+                if (!FixedParamNames.Contains(parameter.Name))
+                {
+                    extraParams.Add(parameter);
+                }
+            }
+
+            return extraParams;
         }
 
         private static async UniTask<object[]> BuildArgsAsync(MethodInfo method, GameObject gameObject,
@@ -235,24 +314,16 @@ namespace GameplayMcp.Tools
 
             if (targetType == typeof(Vector2))
             {
-                var arr = jsonValue.EnumerateArray().ToArray();
-                return new Vector2((float)arr[0].GetDouble(), (float)arr[1].GetDouble());
+                return new Vector2((float)jsonValue[0].GetDouble(), (float)jsonValue[1].GetDouble());
             }
 
             if (targetType == typeof(GameObject))
             {
                 // Parse {"name": "...", "path": "...", "text": "...", "texture": "..."} same as tool's own target params
-                string goName = null, goPath = null, goText = null, goTexture = null;
-                foreach (var prop in jsonValue.EnumerateObject())
-                {
-                    switch (prop.Name)
-                    {
-                        case "name": goName = prop.Value.GetString(); break;
-                        case "path": goPath = prop.Value.GetString(); break;
-                        case "text": goText = prop.Value.GetString(); break;
-                        case "texture": goTexture = prop.Value.GetString(); break;
-                    }
-                }
+                var goName = GetStringProperty(jsonValue, "name");
+                var goPath = GetStringProperty(jsonValue, "path");
+                var goText = GetStringProperty(jsonValue, "text");
+                var goTexture = GetStringProperty(jsonValue, "texture");
 
                 var matcher = (goText != null || goTexture != null)
                     ? (IGameObjectMatcher)new ButtonMatcher(name: goName, path: goPath, text: goText,
@@ -266,19 +337,35 @@ namespace GameplayMcp.Tools
             throw new InvalidOperationException($"Cannot convert JSON value to type '{targetType.Name}'.");
         }
 
-        private static string BuildOverloadParamInfo(MethodInfo[] overloads)
+        private static string GetStringProperty(JsonElement element, string propertyName)
+        {
+            return element.TryGetProperty(propertyName, out var value) ? value.GetString() : null;
+        }
+
+        private static string BuildOverloadParamInfo(List<MethodInfo> overloads)
         {
             var sb = new StringBuilder();
             foreach (var method in overloads)
             {
-                var extraParams = ExtraParams(method).ToArray();
-                if (!extraParams.Any()) continue;
+                var extraParams = ExtraParams(method);
+                if (extraParams.Count == 0) continue;
                 sb.AppendLine();
                 sb.Append("  OperateAsync(");
-                sb.Append(string.Join(", ", extraParams.Select(p =>
-                    p.HasDefaultValue
-                        ? $"{p.ParameterType.Name} {p.Name} = {p.DefaultValue ?? "null"}"
-                        : $"{p.ParameterType.Name} {p.Name}")));
+                for (var i = 0; i < extraParams.Count; i++)
+                {
+                    if (i > 0)
+                    {
+                        sb.Append(", ");
+                    }
+
+                    var parameter = extraParams[i];
+                    sb.Append(parameter.ParameterType.Name).Append(' ').Append(parameter.Name);
+                    if (parameter.HasDefaultValue)
+                    {
+                        sb.Append(" = ").Append(parameter.DefaultValue ?? "null");
+                    }
+                }
+
                 sb.Append(")");
             }
 

@@ -26,7 +26,7 @@ namespace GameplayMcp.Tools
             eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
             eventSystem.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
 
-            var actual = await ListAvailableActionsTool.ListAvailableActions(reachable: false, config: new McpConfig());
+            var actual = await ListAvailableActionsTool.ListAvailableActionsAsync(reachable: false, config: new McpConfig());
 
             Assert.That(actual, Does.Contain("StartButton").And.Contain("\"operator\""));
         }
@@ -49,7 +49,7 @@ namespace GameplayMcp.Tools
             eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
             eventSystem.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
 
-            var actual = await ListAvailableActionsTool.ListAvailableActions(reachable: false, config: new McpConfig());
+            var actual = await ListAvailableActionsTool.ListAvailableActionsAsync(reachable: false, config: new McpConfig());
 
             Assert.That(actual, Does.Contain("Start"));
         }
@@ -58,7 +58,7 @@ namespace GameplayMcp.Tools
         [CreateScene]
         public async Task ListAvailableActions_NoInteractableComponents_ReturnsNoOperableMessage()
         {
-            var actual = await ListAvailableActionsTool.ListAvailableActions(reachable: false, config: new McpConfig());
+            var actual = await ListAvailableActionsTool.ListAvailableActionsAsync(reachable: false, config: new McpConfig());
 
             Assert.That(actual, Does.Not.StartWith("["));
         }
@@ -82,7 +82,7 @@ namespace GameplayMcp.Tools
             eventSystem.AddComponent<UnityEngine.EventSystems.EventSystem>();
             eventSystem.AddComponent<UnityEngine.EventSystems.StandaloneInputModule>();
 
-            var actual = await ListAvailableActionsTool.ListAvailableActions(reachable: false, config: new McpConfig());
+            var actual = await ListAvailableActionsTool.ListAvailableActionsAsync(reachable: false, config: new McpConfig());
 
             Assert.That(actual, Does.Contain("HiddenButton"));
         }

@@ -28,7 +28,7 @@ namespace GameplayMcp.Tools
         [McpServerTool(Name = "list_scenes", ReadOnly = true, Destructive = false)]
         [Description("Returns the currently loaded scenes as JSON. The active scene is marked with active=true.")]
         [Preserve]
-        public static async Task<string> ListScenes(CancellationToken cancellationToken = default)
+        public static async Task<string> ListScenesAsync(CancellationToken cancellationToken = default)
         {
             await UniTask.SwitchToMainThread(cancellationToken);
             try
@@ -44,6 +44,7 @@ namespace GameplayMcp.Tools
                         ["active"] = scene == activeScene,
                     });
                 }
+
                 return JsonSerializer.Serialize(scenes);
             }
             catch (Exception e)

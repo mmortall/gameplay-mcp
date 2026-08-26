@@ -19,7 +19,8 @@ namespace GameplayMcp.Tools
             var go = new GameObject("TargetObject");
             go.AddComponent<Canvas>(); // needs Canvas to be reachable via raycasting, but for name search we skip reachable
 
-            var actual = await InspectGameObjectTool.InspectGameObjectAsync(name: "TargetObject", reachable: false, config: new McpConfig());
+            var actual = await InspectGameObjectTool.InspectGameObjectAsync(name: "TargetObject", reachable: false,
+                config: new McpConfig());
 
             Assert.That(actual, Does.Contain("TargetObject"));
         }
@@ -32,7 +33,8 @@ namespace GameplayMcp.Tools
             var child = new GameObject("ChildObj");
             child.transform.SetParent(parent.transform);
 
-            var actual = await InspectGameObjectTool.InspectGameObjectAsync(path: "/ParentObj/ChildObj", reachable: false, config: new McpConfig());
+            var actual = await InspectGameObjectTool.InspectGameObjectAsync(path: "/ParentObj/ChildObj",
+                reachable: false, config: new McpConfig());
 
             Assert.That(actual, Does.Contain("/ParentObj/ChildObj"));
         }
@@ -52,7 +54,9 @@ namespace GameplayMcp.Tools
             var textComp = textGo.AddComponent<Text>();
             textComp.text = "Start";
 
-            var actual = await InspectGameObjectTool.InspectGameObjectAsync(text: "Start", reachable: false, config: new McpConfig());
+            var actual =
+                await InspectGameObjectTool.InspectGameObjectAsync(text: "Start", reachable: false,
+                    config: new McpConfig());
 
             Assert.That(actual, Does.Contain("Button"));
         }
@@ -61,7 +65,8 @@ namespace GameplayMcp.Tools
         [CreateScene]
         public async Task InspectGameObject_NotFound_ReturnsExceptionMessage()
         {
-            var actual = await InspectGameObjectTool.InspectGameObjectAsync(name: "NonExistentGameObject_12345", reachable: false, config: new McpConfig());
+            var actual = await InspectGameObjectTool.InspectGameObjectAsync(name: "NonExistentGameObject_12345",
+                reachable: false, config: new McpConfig());
 
             Assert.That(actual, Does.Contain("Exception").Or.Contain("not found").Or.Contain("TimeoutException"));
         }

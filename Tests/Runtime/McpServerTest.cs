@@ -4,7 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using ModelContextProtocol.Client;
@@ -85,9 +84,21 @@ namespace GameplayMcp
 
             var result = await _client.CallToolAsync("mygame.list_scenes", new Dictionary<string, object>());
 
-            var json = result.Content.OfType<TextContentBlock>().First().Text;
+            TextContentBlock textBlock = null;
+            foreach (var content in result.Content)
+            {
+                if (content is TextContentBlock block)
+                {
+                    textBlock = block;
+                    break;
+                }
+            }
+
+            Assert.That(textBlock, Is.Not.Null);
+            var json = textBlock.Text;
             var scenes = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement[]>(json);
-            Assert.That(scenes, Has.Some.Matches<System.Text.Json.JsonElement>(s => s.GetProperty("active").GetBoolean()));
+            Assert.That(scenes,
+                Has.Some.Matches<System.Text.Json.JsonElement>(s => s.GetProperty("active").GetBoolean()));
         }
 
         [Test]

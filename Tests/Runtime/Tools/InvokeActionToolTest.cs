@@ -2,6 +2,7 @@
 // This software is released under the MIT License.
 
 using System.Threading.Tasks;
+using GameplayMcp.TestDoubles;
 using NUnit.Framework;
 using TestHelper.Attributes;
 using TestHelper.UI;
@@ -111,7 +112,8 @@ namespace GameplayMcp.Tools
         [CreateScene]
         public async Task InvokeAction_WithUnregisteredOperator_ReturnsError()
         {
-            var actual = await InvokeActionTool.InvokeActionAsync(operatorName: "NonExistentOperator_12345", config: new McpConfig());
+            var actual = await InvokeActionTool.InvokeActionAsync(operatorName: "NonExistentOperator_12345",
+                config: new McpConfig());
 
             Assert.That(actual, Does.Contain("NonExistentOperator_12345"));
         }

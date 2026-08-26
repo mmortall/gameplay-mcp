@@ -9,7 +9,7 @@ using TestHelper.UI.Visualizers;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-namespace GameplayMcp.Tools
+namespace GameplayMcp.TestDoubles
 {
     /// <summary>
     /// Spy operator that has both the base OperateAsync overload and an additional overload with a string parameter.

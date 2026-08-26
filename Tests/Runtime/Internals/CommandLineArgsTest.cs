@@ -21,7 +21,7 @@ namespace GameplayMcp.Internals
         [Test]
         public void GetListenPrefix_WithoutArgument_ReturnsDefaultPrefix()
         {
-            var actual = CommandLineArgs.GetListenPrefix(new string[0]);
+            var actual = CommandLineArgs.GetListenPrefix(System.Array.Empty<string>());
 
             Assert.That(actual, Is.EqualTo(CommandLineArgs.DefaultListenPrefix));
         }

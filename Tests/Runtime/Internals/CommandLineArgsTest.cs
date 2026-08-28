@@ -27,6 +27,12 @@ namespace GameplayMcp.Internals
         }
 
         [Test]
+        public void DefaultListenPrefix_IsLoopbackOnly()
+        {
+            Assert.That(CommandLineArgs.DefaultListenPrefix, Is.EqualTo("http://127.0.0.1:8010/"));
+        }
+
+        [Test]
         public void GetListenPrefix_WithOtherArguments_ReturnsSpecifiedPrefix()
         {
             var args = new[] { "-batchmode", "-gameplayMcpListenPrefix", "http://+:8080/", "-nographics" };

@@ -16,7 +16,7 @@ namespace GameplayMcp.Internals
         /// <summary>
         /// Default HTTP listener prefix used when <c>-gameplayMcpListenPrefix</c> is not specified.
         /// </summary>
-        internal const string DefaultListenPrefix = "http://+:8010/";
+        internal const string DefaultListenPrefix = "http://127.0.0.1:8010/";
 
         /// <summary>
         /// Parses command-line arguments into a key-value dictionary.

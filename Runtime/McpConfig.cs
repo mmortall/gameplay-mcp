@@ -21,11 +21,10 @@ namespace GameplayMcp
         /// HTTP listener prefix.
         /// <p/>
         /// Defaults to the value of the <c>-gameplayMcpListenPrefix</c> command-line argument,
-        /// or <c>"http://+:8010/"</c> if the argument is not specified.
+        /// or <c>"http://127.0.0.1:8010/"</c> if the argument is not specified.
         /// <p/>
-        /// Use wildcard prefix so HttpListener binds to both IPv4 and IPv6 interfaces.
-        /// "localhost" binds IPv6-only on IL2CPP standalone builds, causing connection failures
-        /// when MCP clients connect via IPv4 (127.0.0.1).
+        /// The default is loopback-only because gameplay MCP is test/debug infrastructure.
+        /// Bind to a wider interface only in explicitly authenticated test infrastructure.
         /// </summary>
         public string ListenPrefix
         {

@@ -82,6 +82,21 @@ Returns the currently loaded scenes as JSON. The active scene is marked with `ac
 
 No parameters.
 
+## Semantic Gameplay Agent Tools
+
+This fork adds a reusable semantic P0 layer over the same MCP server and
+upstream UI operators:
+
+- `game_session` — start or inspect semantic session state.
+- `game_observe` — return loaded scenes and `AutomationId` targets.
+- `game_act` — click a target selected by `automationId`.
+- `game_reset` — use configured reset provider, or reload active scene by default.
+- `game_diagnostics` — return duplicate-ID checks and bounded action trace.
+
+Add `AutomationId` to runtime targets, or bind it from a game adapter. Semantic
+actions still delegate to upstream reachability and operator-pool checks. Game
+specific reset providers can be assigned through `GameplayAgentRuntime.ResetHandler`.
+
 > [!TIP]  
 > The `list_scenes` tool only provides a simplified game state.
 > You need to create a custom tool that returns more detailed game states so the model can determine the appropriate course of action.
